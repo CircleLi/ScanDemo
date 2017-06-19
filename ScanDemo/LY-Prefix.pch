@@ -1,0 +1,121 @@
+//
+//  LY-Prefix.pch
+//  ScanDemo
+//
+//  Created by CircleLi on 2017/6/16.
+//  Copyright © 2017年 CircleCircle. All rights reserved.
+//
+
+#ifndef LY_Prefix_pch
+#define LY_Prefix_pch
+
+// Include any system framework and library headers here that should be included in all compilation units.
+// You will also need to set the Prefix Header build setting of one or more of your targets to reference this file.
+
+#import <Availability.h>
+#ifndef __IPHONE_8_0
+#warning "This project uses features only available in iOS SDK 8.0 and later."
+#endif
+
+#ifdef __OBJC__
+#import <UIKit/UIKit.h>
+#import <Foundation/Foundation.h>
+#endif
+
+
+
+#if DEBUG
+//#define NSLog(...) NSLog(__VA_ARGS__)
+
+#define NSLog(format, ...)   do {                                                   \
+fprintf(stderr, "<%s : %d> %s\n",                                                   \
+[[[NSString stringWithUTF8String:__FILE__] lastPathComponent] UTF8String],  \
+__LINE__, __func__);                                                        \
+(NSLog)((format), ##__VA_ARGS__);                                                   \
+fprintf(stderr, "-------\n");                                                       \
+} while(0)
+#else
+#define NSLog(...)                             //宏定义为空
+#endif
+
+
+//compile time 版本判断example
+#if __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_8_0
+
+#endif
+
+//run time 版本判断
+#define SYSTEM_VERSION_EQUAL_TO(v)                  ([[[UIDevice currentDevice] systemVersion] compare:v options:NSNumericSearch] == NSOrderedSame)
+#define SYSTEM_VERSION_GREATER_THAN(v)              ([[[UIDevice currentDevice] systemVersion] compare:v options:NSNumericSearch] == NSOrderedDescending)
+#define SYSTEM_VERSION_GREATER_THAN_OR_EQUAL_TO(v)  ([[[UIDevice currentDevice] systemVersion] compare:v options:NSNumericSearch] != NSOrderedAscending)
+#define SYSTEM_VERSION_LESS_THAN(v)                 ([[[UIDevice currentDevice] systemVersion] compare:v options:NSNumericSearch] == NSOrderedAscending)
+#define SYSTEM_VERSION_LESS_THAN_OR_EQUAL_TO(v)     ([[[UIDevice currentDevice] systemVersion] compare:v options:NSNumericSearch] != NSOrderedDescending)
+
+
+//屏幕 width 、 Height
+#define SCREEN_WIDTH  [[UIScreen mainScreen] bounds].size.width
+#define SCREEN_HEIGHT [[UIScreen mainScreen] bounds].size.height
+#define ADAPT_HEIGHT_NEW(A) ((A)  / 375.00) * SCREEN_WIDTH
+//statusBar 、 navigatoinBar 、tabBar_Height
+#define StatusBar_Height 20.0f
+#define NavigationBar_Height 44.0f
+#define TabBar_Height 49.0f
+
+#if TARGET_OS_IPHONE //真机
+
+#endif
+
+#if TARGET_IPHONE_SIMULATOR //模拟器
+
+#endif
+
+
+
+
+/**
+ Synthsize a weak or strong reference.
+ 
+ Example:
+ @weakify(self)
+ [self doSomething^{
+ @strongify(self)
+ if (!self) return;
+ ...
+ }];
+ 
+ */
+#ifndef weakify
+#if DEBUG
+#if __has_feature(objc_arc)
+#define weakify(object) autoreleasepool{} __weak __typeof__(object) weak##_##object = object;
+#else
+#define weakify(object) autoreleasepool{} __block __typeof__(object) block##_##object = object;
+#endif
+#else
+#if __has_feature(objc_arc)
+#define weakify(object) try{} @finally{} {} __weak __typeof__(object) weak##_##object = object;
+#else
+#define weakify(object) try{} @finally{} {} __block __typeof__(object) block##_##object = object;
+#endif
+#endif
+#endif
+
+#ifndef strongify
+#if DEBUG
+#if __has_feature(objc_arc)
+#define strongify(object) autoreleasepool{} __typeof__(object) object = weak##_##object;
+#else
+#define strongify(object) autoreleasepool{} __typeof__(object) object = block##_##object;
+#endif
+#else
+#if __has_feature(objc_arc)
+#define strongify(object) try{} @finally{} __typeof__(object) object = weak##_##object;
+#else
+#define strongify(object) try{} @finally{} __typeof__(object) object = block##_##object;
+#endif
+#endif
+#endif
+
+
+
+#endif /* LY_Prefix_pch */
