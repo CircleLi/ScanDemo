@@ -75,7 +75,7 @@ extern int hz_ProcessFrame(unsigned char *m_FrameData,int width, int height, HZR
 @property (nonatomic, assign) BOOL isVirgin;
 
 //扫码界面如果置于NavigationController中，如果在interactivePopGesture有效；可能有用户在扫码界面反复地push ，pop， 这是可能带来相机的频繁地start 和 stop， 从而导致非常卡顿； 此 isStart 就是起一个堆栈的作用，在短时间内过滤掉 重复的 start 和 stop。
-@property (atomic, assign) BOOL isStart;
+@property (nonatomic, assign) BOOL isStart;
 
 @end
 
@@ -140,11 +140,17 @@ extern int hz_ProcessFrame(unsigned char *m_FrameData,int width, int height, HZR
 - (void)viewWillAppear:(BOOL)animated{
     [super viewWillAppear:animated];
     if (!_isVirgin) {
-        self.isStart = YES;
+        @synchronized (self) {
+            self.isStart = YES;
+        }
         @weakify(self)
         dispatch_async(self.scanControlserialQueue, ^{
             @strongify(self)
-            if (self.isStart) {
+            BOOL state;
+            @synchronized (self) {
+                state = self.isStart;
+            }
+            if (state) {
                 [self.scanManager startScan];
             }
         });
@@ -160,11 +166,17 @@ extern int hz_ProcessFrame(unsigned char *m_FrameData,int width, int height, HZR
 
 - (void)viewWillDisappear:(BOOL)animated{
     [super viewWillDisappear:animated];
-    self.isStart = NO;
+    @synchronized (self) {
+        self.isStart = NO;
+    }
     @weakify(self)
     dispatch_async(self.scanControlserialQueue, ^{
         @strongify(self)
-        if (!self.isStart) {
+        BOOL  state;
+        @synchronized (self) {
+            state = self.isStart;
+        }
+        if (!state) {
             [self.scanManager stopScan];
         }
         
