@@ -15,6 +15,31 @@
 #define LY_BytesPerChannel sizeof(uint8_t)    //一个像素的格式为BGRA，4个通道，每个通道占的字节数为sizeof(uint8_t)
 #define LY_ChannelCountsPer_BGRA_Pixel 4       //一个像素的格式为BGRA，4个通道
 
+typedef struct RotateImageParametersStruct {
+    uint8_t *rotateImageBaseAddress;//基地址
+    size_t  width;//像素个数
+    size_t  height;//像素个数
+}RotateImageParameters;
+
+/*
+ 图像旋转标记
+ 
+ CW顺时针 、 CCW 表示顺时针
+ 如果是CW90Degree的倍数，请使用LY_RotateFlag_CW90Degree;
+ 如果是CW180Degree的倍数，请使用LY_RotateFlag_CW180Degree;
+ ...依次类推
+ 
+ */
+typedef NS_ENUM(NSInteger, LY_RotateFlag){
+    LY_RotateFlag_CW90Degree = 0,
+    LY_RotateFlag_CW180Degree,
+    LY_RotateFlag_CW270Degree,
+    LY_RotateFlag_CW360Degree, //原图不旋转
+    LY_RotateFlag_CCW90Degree  = LY_RotateFlag_CW270Degree,
+    LY_RotateFlag_CCW180Degree = LY_RotateFlag_CW180Degree,
+    LY_RotateFlag_CCW270Degree = LY_RotateFlag_CW90Degree,
+    LY_RotateFlag_CCW360Degree = LY_RotateFlag_CW360Degree, //原图不旋转
+};
 
 
 @interface Scan_PixelBufferUtils : NSObject
@@ -80,7 +105,21 @@
 + (uint8_t *)clipPixelBuffer:(CVPixelBufferRef)pixelBuffer frame:(CGRect)frame;
 
 
-
+/*
+ 旋转图像是camera视角的图像， 和裁剪与否不相关。  但是 建议先裁剪图片之后，再进行旋转，这样整体耗时会非常少
+ 
+ 注：你需要负责free返回值 RotateImageParameters中的 baseAddress
+ 
+ 此旋转方法，如果是旋转1920 X 1080图片 ，耗时大概0.03秒左右
+ 依次类推，像素越低的图片耗时更少;像素越高的图片耗时更多
+ 
+ 此方法是直接操作每个像素的BGRA 值 进行纯手动旋转！
+ 还有另一种方法，利用CoreGraphics进行旋转，但是转换过程较多，详见链接：
+ http://www.cnblogs.com/smileEvday/archive/2013/05/25/IOSImageEdit.html
+ 利用CoreGrphics的旋转方案 在 ZXingObjcDemo中也有使用
+ 
+ */
++ (RotateImageParameters)rotatePixelBufferBaseAddress:(uint8_t *)baseAddress width:(size_t)width height:(size_t)height rotateFlag:(LY_RotateFlag)rotateFlag;
 
 /**
 根据pixelBuffer的基地址，width ， height 转为image 

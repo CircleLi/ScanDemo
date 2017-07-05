@@ -195,6 +195,98 @@ static int count = 0;
 }
 
 
++ (RotateImageParameters)rotatePixelBufferBaseAddress:(uint8_t *)baseAddress width:(size_t)width height:(size_t)height rotateFlag:(LY_RotateFlag)rotateFlag{
+
+    /*
+     图片(BGRA)顺时针旋转90°。
+     图像数据其实是放在一个一维数据中的，数组中的BGRABGRABGRA.....
+     我们实际看到的一个点其实包含BGRA4个通道，所以每4个通道呈现出我们看到的一个像素点
+     */
+    uint8_t *rotateImageData = malloc(sizeof(uint8_t) * width * height * 4);
+    NSUInteger n = 0;//记录旋转前，每个元素在原始未旋转图像数组中的位置
+    NSUInteger m = 0;//记录旋转后，每个元素在原始未旋转图像数组中的位置
+    size_t rotateImageWidth = 0; //像素个数
+    size_t rotateImageHeight = 0;//像素个数
+    switch (rotateFlag) {
+        case LY_RotateFlag_CW90Degree:
+        {
+            //i->行 ，j->列
+            for (NSUInteger j = 1; j <= width; j++) {
+                for (NSUInteger i = height; i >= 1; i--) {
+                    //将图像顺时针旋转90°(因为从camera得到的图像相对于展示在prelayer的图像是逆时针旋转了90°)
+                    m = width * (i - 1) + j - 1; //width * (i - 1) + j ， 再-1 ，数组从0开始计数
+                    uint8_t *pSrc = baseAddress + m*4;//一个像素 由BGRA 4个通道组成
+                    uint8_t *pDst = rotateImageData + n*4;//一个像素 由BGRA 4个通道组成
+                    size_t   len = 4 * sizeof(uint8_t);//一个像素 由BGRA 4个通道组成
+                    memcpy(pDst, pSrc, len);//一个像素一个像素地拷贝
+                    n++;
+                }
+            }
+            //宽高交换
+            rotateImageWidth = height;
+            rotateImageHeight = width;
+        }
+            break;
+        case LY_RotateFlag_CW180Degree:
+        {
+            //i->行 ，j->列
+            for (NSUInteger i = height; i >= 1; i--) {
+                for (NSUInteger j = width; j >= 1; j--) {
+                    //将图像顺时针旋转180°
+                    m = width * (i - 1) + j - 1; //width * (i - 1) + j ， 再-1 ，数组从0开始计数
+                    uint8_t *pSrc = baseAddress + m*4;//一个像素 由BGRA 4个通道组成
+                    uint8_t *pDst = rotateImageData + n*4;//一个像素 由BGRA 4个通道组成
+                    size_t   len = 4 * sizeof(uint8_t);//一个像素 由BGRA 4个通道组成
+                    memcpy(pDst, pSrc, len);//一个像素一个像素地拷贝
+                    n++;
+                }
+            }
+            //依旧是原来的宽高
+            rotateImageWidth = width;
+            rotateImageHeight = height;
+        }
+            break;
+        case LY_RotateFlag_CW270Degree:
+        {
+            //i->行 ，j->列
+            for (NSUInteger j = width; j >= 1 ; j--) {
+                for (NSUInteger i = 1; i <= height; i++) {
+                    //将图像顺时针旋转270°
+                    m = width * (i - 1) + j - 1; //width * (i - 1) + j ， 再-1 ，数组从0开始计数
+                    uint8_t *pSrc = baseAddress + m*4;//一个像素 由BGRA 4个通道组成
+                    uint8_t *pDst = rotateImageData + n*4;//一个像素 由BGRA 4个通道组成
+                    size_t   len = 4 * sizeof(uint8_t);//一个像素 由BGRA 4个通道组成
+                    memcpy(pDst, pSrc, len);//一个像素一个像素地拷贝
+                    n++;
+                }
+            }
+            //宽高交换
+            rotateImageWidth = height;
+            rotateImageHeight = width;
+        }
+            break;
+        //旋转360°或者给予不存在的枚举值，将不进行任何旋转操作
+        case LY_RotateFlag_CW360Degree:
+        default:
+        {
+            //赋空
+            free(rotateImageData);
+            rotateImageData = NULL;
+            rotateImageWidth = 0;
+            rotateImageHeight = 0;
+        }
+            break;
+    }
+
+    RotateImageParameters parameters;
+    parameters.rotateImageBaseAddress = rotateImageData;
+    parameters.width = rotateImageWidth;
+    parameters.height = rotateImageHeight;
+    
+    return parameters;
+}
+
+
 //camera视角,重新开辟的空间的 baseAddress 可以用此方法进行图片转换
 + (UIImage *)pixelBuffer_Convert_image32BGRA:(uint8_t *)baseAddress width:(size_t)width height:(size_t)height{
     UIImage *image = nil;
