@@ -77,6 +77,9 @@ extern int hz_ProcessFrame(unsigned char *m_FrameData,int width, int height, HZR
 //扫码界面如果置于NavigationController中，如果在interactivePopGesture有效；可能有用户在扫码界面反复地push ，pop， 这是可能带来相机的频繁地start 和 stop， 从而导致非常卡顿； 此 isStart 就是起一个堆栈的作用，在短时间内过滤掉 重复的 start 和 stop。
 @property (nonatomic, assign) BOOL isStart;
 
+//给previewLayer添加上pinch手势 ，进行缩放时，可以修改此值。默认为1.0f,也就是不进行任何缩放
+@property (nonatomic, assign) CGFloat previewLayerZoomScale;
+
 @end
 
 @implementation ScanViewController
@@ -110,6 +113,7 @@ extern int hz_ProcessFrame(unsigned char *m_FrameData,int width, int height, HZR
     if (self) {
         self.automaticallyAdjustsScrollViewInsets = NO;
         _isVirgin = YES;
+        _previewLayerZoomScale = 1.0f;
     }
     return self;
 }
@@ -273,6 +277,17 @@ extern int hz_ProcessFrame(unsigned char *m_FrameData,int width, int height, HZR
         rectOfScanArea.origin.x += (actualWidth - CGRectGetWidth(self.view.bounds))/2.0;//这里 除以2.0 ,是因为previewLayer.videoGravity = AVLayerVideoGravityResizeAspectFill 的特性
     }
     
+/***************缩放计算*******************/
+    /*
+     _previewLayerZoomScale = 1.0f , 没有缩放，可以直接删去此代码
+     _previewLayerZoomScale > 1.0f , previewLayer放大了===> 缩小裁剪区域
+     _previewLayerZoomScale < 1.0f , previewLayer缩小了===> 放大裁剪区域 ，但是我们一般不太可能去将previewLayer缩小,因为这样出来的捕获画面中的实体会更小,用户体验不好
+     */
+    rectOfScanArea.origin.x += CGRectGetWidth(rectOfScanArea) * (1.0f - 1.0f/_previewLayerZoomScale)/2.0f; //除以2.0f ,是transfromScale的特性
+    rectOfScanArea.origin.y += CGRectGetHeight(rectOfScanArea)* (1.0f - 1.0f/_previewLayerZoomScale)/2.0f;//除以2.0f ,是transfromScale的特性
+    rectOfScanArea.size.width = CGRectGetWidth(rectOfScanArea)/_previewLayerZoomScale;
+    rectOfScanArea.size.height = CGRectGetHeight(rectOfScanArea)/_previewLayerZoomScale;
+/***************缩放计算*******************/
     
     CGFloat clip_wRatio = CGRectGetWidth(rectOfScanArea)/CGRectGetWidth(rectOfSelfView);
     CGFloat clip_hRatio = CGRectGetHeight(rectOfScanArea)/CGRectGetHeight(rectOfSelfView);
