@@ -234,6 +234,7 @@ extern int hz_ProcessFrame(unsigned char *m_FrameData,int width, int height, HZR
     }
     
     free(clipImageBaseAddress);
+    clipImageBaseAddress = NULL;
 }
 
 
@@ -384,9 +385,11 @@ extern int hz_ProcessFrame(unsigned char *m_FrameData,int width, int height, HZR
     free(rainbowDebugInfo);
     free(rainbowCode);
     free(rainbowColorInfo);
-    
-    
     free(clipImageWithoutAlphaBaseAddress);
+    rainbowDebugInfo = NULL;
+    rainbowCode      = NULL;
+    rainbowColorInfo = NULL;
+    clipImageWithoutAlphaBaseAddress = NULL;
     
     return RecognizeSuccess;
 }
@@ -442,7 +445,7 @@ extern int hz_ProcessFrame(unsigned char *m_FrameData,int width, int height, HZR
     }
     
     free(singleChannelBaseAddress);
-    
+    singleChannelBaseAddress = NULL;
     return RecognizeSuccess;
 }
 
