@@ -9,11 +9,12 @@
 #import <UIKit/UIKit.h>
 #import "Scan_CaptureVideoManager.h"
 
-typedef enum : NSUInteger {
+typedef NS_ENUM(NSInteger, RecognizeAlgorithm){
     RecognizeAlgorithm_RainbowCode,//彩虹码
     RecognizeAlgorithm_BlackWhiteCode,//黑白码
     //RecognizeAlgorithm_AllCode,//识别以上所以类型条码
-} RecognizeAlgorithm;
+};
+
 
 //彩虹码
 extern NSString *const LY_RainbowBarcode_Key; // Value : NSString
