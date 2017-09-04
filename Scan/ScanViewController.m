@@ -387,7 +387,7 @@ extern int hz_ProcessFrame(unsigned char *m_FrameData,int width, int height, HZR
             [self.scanManager suspendScan];
             dispatch_semaphore_signal(semaphore);
         });
-        
+        dispatch_semaphore_wait(semaphore, DISPATCH_TIME_FOREVER);
         if (_delegate && [_delegate respondsToSelector:@selector(scanVC_SuccessRecogize:barcodeInfo:)]) {
             [self playBeepSound];
             dispatch_async(dispatch_get_main_queue(), ^{
@@ -448,7 +448,7 @@ extern int hz_ProcessFrame(unsigned char *m_FrameData,int width, int height, HZR
             [self.scanManager suspendScan];
             dispatch_semaphore_signal(semaphore);
         });
-        
+        dispatch_semaphore_wait(semaphore, DISPATCH_TIME_FOREVER);
         if (_delegate && [_delegate respondsToSelector:@selector(scanVC_SuccessRecogize:barcodeInfo:)]) {
             dispatch_async(dispatch_get_main_queue(), ^{
                 [self playBeepSound];
